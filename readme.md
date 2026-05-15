@@ -35,4 +35,7 @@ This repository contains the backend code for a Learning Management System (LMS)
 ## Admin features
 - user management
 
+## keywords
+- nodejs express mongodb jwt lms learning-management-system backend api monngodb restful-api mangoose
+
 

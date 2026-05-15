@@ -1,0 +1,42 @@
+{
+  "name": "learning-management-system-backend",
+  "version": "1.0.0",
+  "description": "This repository contains the backend code for a Learning Management System (LMS) built using Node.js, Express, and MongoDB. The LMS allows users to manage courses, enrollments, and user accounts.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnbalaji786/Learning-Management-System-Backend.git"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "mongodb",
+    "jwt",
+    "lms",
+    "learning-management-system",
+    "backend",
+    "api",
+    "monngodb",
+    "restful-api",
+    "mangoose"
+  ],
+  "author": "balaji yeshwanth kumar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/johnbalaji786/Learning-Management-System-Backend/issues"
+  },
+  "homepage": "https://github.com/johnbalaji786/Learning-Management-System-Backend#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.6.2"
+  }
+}
