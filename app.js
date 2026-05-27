@@ -1,6 +1,8 @@
 const express = require('express');
 const authRouter = require('./routes/authRoutes');
 const cookieParser = require('cookie-parser');
+const errorRoute = require('./middlewares/errorRoute');
+const logger = require('./middlewares/logger');
 
 const app = express();
 
@@ -10,6 +12,12 @@ app.use(express.json());
 // middleware to parse cookies
 app.use(cookieParser());
 
+//custom logger middleware
+app.use(logger);
+
 app.use('/api/v1/auth', authRouter);
+
+// middleware to handle 404 errors for undefined routes
+app.use(errorRoute);
 
 module.exports = app;
