@@ -5,9 +5,10 @@ const Course = require('../models/Course');
 const createBooking = async (req, res) => {
 try {
 
-
+   
     const { courseId } = req.params;
-    const studentId = req.user.userId;
+    // const studentId = req.user.userId;
+    const studentId = req.user._id;
 
     const {
         bookingDate,
@@ -69,7 +70,7 @@ const getMyBookings = async (req, res) => {
 try {
 
 
-    const studentId = req.user.userId;
+    const studentId = req.user._id;
 
     const bookings = await Booking.find({
         student: studentId
