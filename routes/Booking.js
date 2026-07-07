@@ -1,46 +1,66 @@
-const express = require('express');
-
-const {
-    isAuthenticated,
-    allowRoles
-} = require('../middlewares/auth');
-
-const {
-    createBooking,
-    getMyBookings,
-    updateBookingStatus,
-    getBookingById
-} = require('../controllers/bookingController');
+const express = require("express");
 
 const bookingRouter = express.Router();
 
+const {
+  createBooking,
+  getMyBookings,
+  getBookingById,
+  updateBookingStatus,
+  getTutorBookings,
+  addMeetingLink,
+  addLessonRecording,
+} = require("../controllers/bookingController");
+
+const { isAuthenticated, allowRoles } = require("../middlewares/auth");
+
 bookingRouter.use(isAuthenticated);
 
-// Student Routes
-bookingRouter.post(
-    '/:courseId/book',
-    allowRoles(['student']),
-    createBooking
-);
+// ==============================
+// STUDENT ROUTES
+// ==============================
+
+bookingRouter.post("/:courseId/book", allowRoles(["student"]), createBooking);
+
+bookingRouter.get("/my-bookings", allowRoles(["student"]), getMyBookings);
+
+// ==============================
+// TUTOR ROUTES
+// ==============================
 
 bookingRouter.get(
-    '/',
-    allowRoles(['student']),
-    getMyBookings
+  "/tutor-bookings",
+  allowRoles(["tutor"]),
+  getTutorBookings
 );
 
-// Tutor Routes
 bookingRouter.put(
-    '/:bookingId/status',
-    allowRoles(['tutor']),
-    updateBookingStatus
+  "/:bookingId/status",
+  allowRoles(["tutor"]),
+  updateBookingStatus
 );
 
-// Shared Routes
+bookingRouter.put(
+  "/:bookingId/meeting",
+  allowRoles(["tutor"]),
+  addMeetingLink
+);
+
+// ==============================
+// SHARED ROUTES
+// ==============================
+
 bookingRouter.get(
-    '/:id',
-    allowRoles(['student', 'tutor']),
-    getBookingById
+  "/:id",
+  allowRoles(["student", "tutor"]),
+  getBookingById
 );
-
+// ==============================
+// RECORDING ROUTES
+// ==============================
+bookingRouter.put(
+  "/:bookingId/recording",
+  allowRoles(["tutor"]),
+  addLessonRecording,
+);
 module.exports = bookingRouter;

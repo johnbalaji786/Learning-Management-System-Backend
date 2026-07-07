@@ -1,46 +1,50 @@
-const express = require('express');
+const express = require("express");
 
-const paymentRouter = express.Router();
+const router = express.Router();
 
-const {
-    makePayment,
-    getMyPayments,
-    getPaymentById,
-    getTutorPayments
-} = require('../controllers/paymentController');
+const { isAuthenticated, allowRoles } = require("../middlewares/auth");
 
 const {
-    isAuthenticated,
-    allowRoles
-} = require('../middlewares/auth');
+  createOrder,
+  makePayment,
+  getMyPayments,
+  getPaymentById,
+  getTutorPayments,
+} = require("../controllers/paymentController");
 
-paymentRouter.use(isAuthenticated);
-
-// student
-paymentRouter.post(
-    '/:bookingId/pay',
-    allowRoles(['student']),
-    makePayment
+// Razorpay Order
+router.post(
+  "/create-order",
+  isAuthenticated,
+  allowRoles(["student"]),
+  createOrder,
 );
 
-paymentRouter.get(
-    '/',
-    allowRoles(['student']),
-    getMyPayments
+// Fake Payment
+router.post(
+  "/:bookingId/pay",
+  isAuthenticated,
+  allowRoles(["student"]),
+  makePayment,
 );
 
-// tutor earnings
-paymentRouter.get(
-    '/tutor/earnings',
-    allowRoles(['tutor']),
-    getTutorPayments
+// Student Payment History
+router.get(
+  "/my-payments",
+  isAuthenticated,
+  allowRoles(["student"]),
+  getMyPayments,
 );
 
-// shared
-paymentRouter.get(
-    '/:id',
-    allowRoles(['student', 'tutor', 'admin']),
-    getPaymentById
+// Tutor Earnings
+router.get(
+  "/tutor-payments",
+  isAuthenticated,
+  allowRoles(["tutor"]),
+  getTutorPayments,
 );
 
-module.exports = paymentRouter;
+// Single Payment
+router.get("/:id", isAuthenticated, getPaymentById);
+
+module.exports = router;

@@ -10,7 +10,7 @@ const authController = {
     try {
           
       //get the details from the request body
-      const { name, email, password } = req.body;
+      const { name, email, password , role } = req.body;
       
        // check if the user exists already
             const existingUser = await User.findOne({ email });
@@ -23,7 +23,7 @@ const authController = {
             const hashedPassword = await bcrypt.hash(password, 10);
 
             // create a new user
-            const newUser = new User({ name, email, password: hashedPassword });
+            const newUser = new User({ name, email, password: hashedPassword , role });
 
             // save the user to the database
             await newUser.save();
@@ -95,7 +95,7 @@ const authController = {
     try {
 
         const userId = req.user.userId;
-
+  console.log(userId);
         const user = await User.findById(userId).select('-password');
 
         if (!user) {

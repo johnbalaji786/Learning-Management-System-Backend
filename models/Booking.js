@@ -1,62 +1,77 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const bookingSchema = new mongoose.Schema({
-
+const bookingSchema = new mongoose.Schema(
+  {
     student: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
 
     tutor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
 
     course: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course',
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
     },
 
     bookingDate: {
-        type: Date,
-        required: true
+      type: Date,
+      required: true,
     },
 
     startTime: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
 
     endTime: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
 
     meetingLink: {
-        type: String,
-        default: ''
+      type: String,
+      default: "",
     },
-
+ 
     status: {
-        type: String,
-        enum: ['pending', 'confirmed', 'completed', 'cancelled'],
-        default: 'pending'
+      type: String,
+      enum: ["pending", "confirmed", "completed", "cancelled"],
+      default: "pending",
     },
 
     paymentStatus: {
-        type: String,
-        enum: ['pending', 'paid', 'failed'],
-        default: 'pending'
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",
     },
 
     amount: {
-        type: Number,
-        required: true
-    }
+      type: Number,
+      required: true,
+    },
 
-}, { timestamps: true });
+    notes: {
+      type: String,
+      default: "",
+    },
 
-module.exports = mongoose.model('Booking', bookingSchema);
+    isReviewed: {
+      type: Boolean,
+      default: false,
+    },
+    lessonRecording: {
+      type: String,
+      default: "",
+    },
+  },
+  { timestamps: true },
+);
+
+module.exports = mongoose.model("Booking", bookingSchema);

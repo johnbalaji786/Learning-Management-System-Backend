@@ -1,154 +1,115 @@
-const Payment = require('../models/Payment');
-const Booking = require('../models/Booking');
+const Razorpay = require("razorpay");
+const Booking = require("../models/Booking");
+const Payment = require("../models/Payment");
 
-// MAKE PAYMENT
+const { RAZORPAY_KEY_ID, RAZORPAY_SECRET } = require("../utils/config");
+
+const razorpay = new Razorpay({
+  key_id: RAZORPAY_KEY_ID,
+  key_secret: RAZORPAY_SECRET,
+});
+
+// CREATE PAYMENT ORDER
+const createOrder = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        message: "Booking not found",
+      });
+    }
+
+    const options = {
+      amount: booking.amount * 100,
+      currency: "INR",
+      receipt: booking._id.toString(),
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.status(200).json({
+      order,
+      key: RAZORPAY_KEY_ID,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// ==============================
+// FAKE PAYMENT
+// ==============================
 const makePayment = async (req, res) => {
-    try {
+  try {
+    const { bookingId } = req.params;
 
-        const { bookingId } = req.params;
+    const booking = await Booking.findById(bookingId);
 
-        const booking = await Booking.findById(bookingId);
-
-        if (!booking) {
-            return res.status(404).json({
-                message: 'Booking not found'
-            });
-        }
-
-        // check if already paid
-        const existingPayment = await Payment.findOne({
-            booking: bookingId,
-            status: 'success'
-        });
-
-        if (existingPayment) {
-            return res.status(400).json({
-                message: 'Payment already completed'
-            });
-        }
-
-        const payment = await Payment.create({
-            student: booking.student,
-            tutor: booking.tutor,
-            booking: booking._id,
-            amount: booking.amount,
-            paymentMethod: 'razorpay',
-            transactionId: `TXN_${Date.now()}`,
-            status: 'success',
-            paidAt: new Date()
-        });
-
-        // update booking payment status
-        booking.paymentStatus = 'paid';
-
-        await booking.save();
-
-        res.status(201).json({
-            message: 'Payment successful',
-            payment
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            message: error.message
-        });
-
+    if (!booking) {
+      return res.status(404).json({
+        message: "Booking not found",
+      });
     }
+
+    const existingPayment = await Payment.findOne({
+      booking: bookingId,
+    });
+
+    if (existingPayment) {
+      return res.status(400).json({
+        message: "Payment already completed",
+      });
+    }
+
+    const payment = await Payment.create({
+      student: booking.student,
+      tutor: booking.tutor,
+      booking: booking._id,
+      amount: booking.amount,
+      paymentMethod: "razorpay",
+      transactionId: `TXN_${Date.now()}`,
+      status: "success",
+      paidAt: new Date(),
+    });
+
+    booking.paymentStatus = "paid";
+    await booking.save();
+
+    res.status(200).json({
+      message: "Payment Successful",
+      payment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
-// GET MY PAYMENTS
 const getMyPayments = async (req, res) => {
-    try {
-
-        const studentId = req.user._id;
-
-        const payments = await Payment.find({
-            student: studentId
-        })
-            .populate('booking')
-            .populate('tutor', 'name email')
-            .sort({ createdAt: -1 });
-
-        res.status(200).json({
-            payments
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            message: error.message
-        });
-
-    }
+  res.json({ payments: [] });
 };
 
-// GET PAYMENT BY ID
 const getPaymentById = async (req, res) => {
-    try {
-
-        const { id } = req.params;
-
-        const payment = await Payment.findById(id)
-            .populate('student', 'name email')
-            .populate('tutor', 'name email')
-            .populate('booking');
-
-        if (!payment) {
-            return res.status(404).json({
-                message: 'Payment not found'
-            });
-        }
-
-        res.status(200).json({
-            payment
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            message: error.message
-        });
-
-    }
+  res.json({ payment: {} });
 };
 
-// GET TUTOR EARNINGS
 const getTutorPayments = async (req, res) => {
-    try {
-
-        const tutorId = req.user.userId;
-
-        const payments = await Payment.find({
-            tutor: tutorId,
-            status: 'success'
-        })
-            .populate('student', 'name email')
-            .populate('booking')
-            .sort({ createdAt: -1 });
-
-        const totalEarnings = payments.reduce(
-            (sum, payment) => sum + payment.amount,
-            0
-        );
-
-        res.status(200).json({
-            totalEarnings,
-            payments
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            message: error.message
-        });
-
-    }
+  res.json({
+    totalEarnings: 0,
+    payments: [],
+  });
 };
 
 module.exports = {
-    makePayment,
-    getMyPayments,
-    getPaymentById,
-    getTutorPayments
+  createOrder,
+  makePayment,
+  getMyPayments,
+  getPaymentById,
+  getTutorPayments,
 };

@@ -1,45 +1,39 @@
-const express = require('express');
+const express = require("express");
 
-const reviewRouter = express.Router();
-
-const {
-    createReview,
-    getReviewsByCourse,
-    getReviewsByTutor,
-    deleteReview
-} = require('../controllers/reviewController');
+const router = express.Router();
 
 const {
-    isAuthenticated,
-    allowRoles
-} = require('../middlewares/auth');
+  createReview,
+  getReviewsByCourse,
+  getReviewsByTutor,
+  deleteReview,
+} = require("../controllers/reviewController");
 
-// CREATE REVIEW
-reviewRouter.post(
-    '/',
-    isAuthenticated,
-    allowRoles(['student']),
-    createReview
+const { isAuthenticated, allowRoles } = require("../middlewares/auth");
+
+// ==============================
+// PUBLIC ROUTES
+// ==============================
+
+// Get Reviews By Course
+router.get("/course/:courseId", getReviewsByCourse);
+
+// Get Reviews By Tutor
+router.get("/tutor/:tutorId", getReviewsByTutor);
+
+// ==============================
+// PROTECTED ROUTES
+// ==============================
+
+// Student Review
+router.post(
+  "/:courseId",
+  isAuthenticated,
+  allowRoles(["student"]),
+  createReview,
 );
 
-// GET COURSE REVIEWS
-reviewRouter.get(
-    '/course/:courseId',
-    getReviewsByCourse
-);
+// Delete Review
+router.delete("/:id", isAuthenticated, allowRoles(["student"]), deleteReview);
 
-// GET TUTOR REVIEWS
-reviewRouter.get(
-    '/tutor/:tutorId',
-    getReviewsByTutor
-);
-
-// DELETE REVIEW
-reviewRouter.delete(
-    '/:id',
-    isAuthenticated,
-    allowRoles(['student']),
-    deleteReview
-);
-
-module.exports = reviewRouter;
+module.exports = router;
