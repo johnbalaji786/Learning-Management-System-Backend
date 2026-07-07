@@ -85,7 +85,7 @@ const authController = {
 
   getMe: async (req, res) => {
     try {
-      const userId = req.user.userId;
+      const userId = req.user._id;
       console.log(userId);
       const user = await User.findById(userId).select("-password");
 
