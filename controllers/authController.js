@@ -38,6 +38,7 @@ const authController = {
   },
 
   login: async (req, res) => {
+    console.log("Login API Hit");
     try {
       const { email, password } = req.body;
 
