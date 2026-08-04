@@ -45,7 +45,15 @@ const courseController = {
   // GET ALL COURSES
   getCourses: async (req, res) => {
     try {
-      const courses = await Course.find().populate("tutor", "name email");
+      const { tutor } = req.query;
+
+      const filter = {};
+
+      if (tutor) {
+        filter.tutor = tutor;
+      }
+
+      const courses = await Course.find(filter).populate("tutor", "name email");
 
       res.status(200).json({
         courses,
