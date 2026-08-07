@@ -92,18 +92,71 @@ const makePayment = async (req, res) => {
 };
 
 const getMyPayments = async (req, res) => {
-  res.json({ payments: [] });
+  try {
+    const payments = await Payment.find({
+      student: req.user._id,
+    })
+      .populate("tutor", "name email")
+      .populate("booking")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      payments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 const getPaymentById = async (req, res) => {
-  res.json({ payment: {} });
+  try {
+    const payment = await Payment.findById(req.params.id)
+      .populate("student", "name email")
+      .populate("tutor", "name email")
+      .populate("booking");
+
+    if (!payment) {
+      return res.status(404).json({
+        message: "Payment not found",
+      });
+    }
+
+    res.status(200).json({
+      payment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 const getTutorPayments = async (req, res) => {
-  res.json({
-    totalEarnings: 0,
-    payments: [],
-  });
+  try {
+    const payments = await Payment.find({
+      tutor: req.user._id,
+      status: "success",
+    })
+      .populate("student", "name email")
+      .populate("booking")
+      .sort({ createdAt: -1 });
+
+    const totalEarnings = payments.reduce(
+      (sum, payment) => sum + payment.amount,
+      0,
+    );
+
+    res.status(200).json({
+      totalEarnings,
+      payments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 module.exports = {

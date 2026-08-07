@@ -12,6 +12,23 @@ const createBooking = async (req, res) => {
 
     const { bookingDate, startTime, endTime } = req.body;
 
+    // Validate required fields
+    if (!bookingDate || !startTime || !endTime) {
+      return res.status(400).json({
+        message: "Please fill all booking details",
+      });
+    }
+
+    // Validate start time < end time
+    const start = new Date(`1970-01-01T${startTime}:00`);
+    const end = new Date(`1970-01-01T${endTime}:00`);
+
+    if (start >= end) {
+      return res.status(400).json({
+        message: "Start time must be earlier than end time",
+      });
+    }
+
     // Check course exists
     const course = await Course.findById(courseId);
 
@@ -42,6 +59,7 @@ const createBooking = async (req, res) => {
       });
     }
 
+    // Create booking
     const booking = await Booking.create({
       student: studentId,
       tutor: course.tutor,
@@ -251,8 +269,6 @@ const addLessonRecording = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   createBooking,
