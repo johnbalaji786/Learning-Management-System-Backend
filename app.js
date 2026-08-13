@@ -15,7 +15,7 @@ const cors = require("cors");
 const app = express();
 app.use(
   cors({
-    origin: "https://learnhubgrow.netlify.app",
+    origin: ["http://localhost:5173", "https://learnhubgrow.netlify.app"],
     credentials: true,
   }),
 );
