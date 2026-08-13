@@ -12,6 +12,7 @@ const {
   addLessonRecording,
   cancelBooking,
   rescheduleBooking,
+  getLessonRecording,
 } = require("../controllers/bookingController");
 
 const { isAuthenticated, allowRoles } = require("../middlewares/auth");
@@ -27,6 +28,12 @@ bookingRouter.post("/:courseId/book", allowRoles(["student"]), createBooking);
 bookingRouter.get("/my-bookings", allowRoles(["student"]), getMyBookings);
 
 bookingRouter.put("/:bookingId/cancel", allowRoles(["student"]), cancelBooking);
+
+bookingRouter.get(
+  "/:bookingId/recording",
+  allowRoles(["student", "tutor"]),
+  getLessonRecording,
+);
 
 bookingRouter.put(
   "/:bookingId/reschedule",

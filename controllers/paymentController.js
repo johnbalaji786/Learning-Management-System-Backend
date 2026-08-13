@@ -97,7 +97,13 @@ const getMyPayments = async (req, res) => {
       student: req.user._id,
     })
       .populate("tutor", "name email")
-      .populate("booking")
+      .populate({
+        path: "booking",
+        populate: {
+          path: "course",
+          select: "title subject",
+        },
+      })
       .sort({ createdAt: -1 });
 
     res.status(200).json({

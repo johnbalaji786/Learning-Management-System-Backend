@@ -1,5 +1,6 @@
 const Booking = require("../models/Booking");
 const Course = require("../models/Course");
+const TutorProfile = require("../models/TutorProfile");
 
 // ==============================
 // CREATE BOOKING (Student)
@@ -12,14 +13,18 @@ const createBooking = async (req, res) => {
 
     const { bookingDate, startTime, endTime } = req.body;
 
+    // ==============================
     // Validate required fields
+    // ==============================
     if (!bookingDate || !startTime || !endTime) {
       return res.status(400).json({
         message: "Please fill all booking details",
       });
     }
 
+    // ==============================
     // Validate start time < end time
+    // ==============================
     const start = new Date(`1970-01-01T${startTime}:00`);
     const end = new Date(`1970-01-01T${endTime}:00`);
 
@@ -29,7 +34,9 @@ const createBooking = async (req, res) => {
       });
     }
 
+    // ==============================
     // Check course exists
+    // ==============================
     const course = await Course.findById(courseId);
 
     if (!course) {
@@ -38,14 +45,68 @@ const createBooking = async (req, res) => {
       });
     }
 
+    // ==============================
     // Prevent booking own course
+    // ==============================
     if (course.tutor.toString() === studentId.toString()) {
       return res.status(400).json({
         message: "You cannot book your own course",
       });
     }
 
+    // ==============================
+    // Check Tutor Availability
+    // ==============================
+    const tutorProfile = await TutorProfile.findOne({
+      user: course.tutor,
+    });
+
+    if (!tutorProfile) {
+      return res.status(404).json({
+        message: "Tutor profile not found",
+      });
+    }
+
+    // Get day from booking date
+    const bookingDay = new Date(bookingDate)
+      .toLocaleDateString("en-US", {
+        weekday: "long",
+      })
+      .toLowerCase();
+
+    // Find matching availability
+    const availableSlot = tutorProfile.availability.find(
+      (slot) => slot.day.toLowerCase() === bookingDay,
+    );
+
+    if (!availableSlot) {
+      return res.status(400).json({
+        message: `Tutor is not available on ${bookingDay}`,
+      });
+    }
+
+    // ==============================
+    // Check booking time is inside
+    // tutor availability
+    // ==============================
+
+    const requestedStart = new Date(`1970-01-01T${startTime}:00`);
+
+    const requestedEnd = new Date(`1970-01-01T${endTime}:00`);
+
+    const availableStart = new Date(`1970-01-01T${availableSlot.startTime}:00`);
+
+    const availableEnd = new Date(`1970-01-01T${availableSlot.endTime}:00`);
+
+    if (requestedStart < availableStart || requestedEnd > availableEnd) {
+      return res.status(400).json({
+        message: `Tutor is available on ${bookingDay} only from ${availableSlot.startTime} to ${availableSlot.endTime}`,
+      });
+    }
+
+    // ==============================
     // Prevent duplicate booking
+    // ==============================
     const existingBooking = await Booking.findOne({
       course: courseId,
       student: studentId,
@@ -59,7 +120,9 @@ const createBooking = async (req, res) => {
       });
     }
 
+    // ==============================
     // Create booking
+    // ==============================
     const booking = await Booking.create({
       student: studentId,
       tutor: course.tutor,
@@ -246,6 +309,8 @@ const addLessonRecording = async (req, res) => {
     const { bookingId } = req.params;
     const { recording } = req.body;
 
+    const tutorId = req.user._id;
+
     const booking = await Booking.findById(bookingId);
 
     if (!booking) {
@@ -254,16 +319,76 @@ const addLessonRecording = async (req, res) => {
       });
     }
 
+    // Only the tutor who owns this booking can add recording
+    if (booking.tutor.toString() !== tutorId.toString()) {
+      return res.status(403).json({
+        message: "You are not authorized to add recording",
+      });
+    }
+
+    if (!recording) {
+      return res.status(400).json({
+        message: "Recording URL is required",
+      });
+    }
+
     booking.lessonRecording = recording;
 
     await booking.save();
 
-    res.json({
+    res.status(200).json({
       message: "Recording added successfully",
       booking,
     });
   } catch (error) {
     res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+// ==============================
+// GET LESSON RECORDING
+// Student: Only authorized student
+// Tutor: Only booking owner tutor
+// ==============================
+const getLessonRecording = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const currentUserId = req.user._id;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        message: "Booking not found",
+      });
+    }
+
+    // Check whether current user is the student or tutor
+    const isStudent = booking.student.toString() === currentUserId.toString();
+
+    const isTutor = booking.tutor.toString() === currentUserId.toString();
+
+    // Only related student or tutor can access
+    if (!isStudent && !isTutor) {
+      return res.status(403).json({
+        message: "You are not authorized to access this recording",
+      });
+    }
+
+    // Recording not uploaded yet
+    if (!booking.lessonRecording) {
+      return res.status(404).json({
+        message: "Lesson recording not available",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Recording access granted",
+      recording: booking.lessonRecording,
+    });
+  } catch (error) {
+    return res.status(500).json({
       message: error.message,
     });
   }
@@ -420,4 +545,5 @@ module.exports = {
   addLessonRecording,
   cancelBooking,
   rescheduleBooking,
+  getLessonRecording,
 };
