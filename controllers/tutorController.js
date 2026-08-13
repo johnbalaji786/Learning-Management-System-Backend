@@ -1,6 +1,7 @@
 const Course = require("../models/Course");
 const Booking = require("../models/Booking");
 const Review = require("../models/Review");
+const User = require("../models/user");
 
 const getTutorDashboard = async (req, res) => {
   try {
@@ -65,15 +66,21 @@ const getTutorDashboard = async (req, res) => {
       message: error.message,
     });
   }
-}; // ==============================
+};
+// ==============================
 // GET TUTOR AVAILABILITY
 // ==============================
 const getTutorAvailability = async (req, res) => {
   try {
+    console.log("REQ.USER:", req.user);
+    console.log("REQ.USER ID:", req.user?._id);
+
     const tutor = await User.findOne({
       _id: req.user._id,
       role: "tutor",
     }).select("availability");
+
+    console.log("TUTOR:", tutor);
 
     if (!tutor) {
       return res.status(404).json({
@@ -85,12 +92,13 @@ const getTutorAvailability = async (req, res) => {
       availability: tutor.availability || [],
     });
   } catch (error) {
+    console.error("GET AVAILABILITY ERROR:", error);
+
     res.status(500).json({
       message: error.message,
     });
   }
 };
-
 // ==============================
 // UPDATE TUTOR AVAILABILITY
 // ==============================
