@@ -1,6 +1,6 @@
 const Booking = require("../models/Booking");
 const Course = require("../models/Course");
-const TutorProfile = require("../models/TutorProfile");
+const User = require("../models/User");
 
 // ==============================
 // CREATE BOOKING (Student)
@@ -57,13 +57,14 @@ const createBooking = async (req, res) => {
     // ==============================
     // Check Tutor Availability
     // ==============================
-    const tutorProfile = await TutorProfile.findOne({
-      user: course.tutor,
+    const tutor = await User.findOne({
+      _id: course.tutor,
+      role: "tutor",
     });
 
-    if (!tutorProfile) {
+    if (!tutor) {
       return res.status(404).json({
-        message: "Tutor profile not found",
+        message: "Tutor not found",
       });
     }
 
@@ -75,10 +76,9 @@ const createBooking = async (req, res) => {
       .toLowerCase();
 
     // Find matching availability
-    const availableSlot = tutorProfile.availability.find(
+    const availableSlot = (tutor.availability || []).find(
       (slot) => slot.day.toLowerCase() === bookingDay,
     );
-
     if (!availableSlot) {
       return res.status(400).json({
         message: `Tutor is not available on ${bookingDay}`,

@@ -53,6 +53,28 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    availability: [
+      {
+        day: {
+          type: String,
+          enum: [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+          ],
+        },
+        startTime: {
+          type: String,
+        },
+        endTime: {
+          type: String,
+        },
+      },
+    ],
 
     location: {
       type: String,

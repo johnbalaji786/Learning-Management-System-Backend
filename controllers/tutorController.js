@@ -1,7 +1,6 @@
 const Course = require("../models/Course");
 const Booking = require("../models/Booking");
 const Review = require("../models/Review");
-const TutorProfile = require("../models/TutorProfile");
 
 const getTutorDashboard = async (req, res) => {
   try {
@@ -66,26 +65,24 @@ const getTutorDashboard = async (req, res) => {
       message: error.message,
     });
   }
-};
-// ==============================
+}; // ==============================
 // GET TUTOR AVAILABILITY
 // ==============================
 const getTutorAvailability = async (req, res) => {
   try {
-    const tutorId = req.user._id;
+    const tutor = await User.findOne({
+      _id: req.user._id,
+      role: "tutor",
+    }).select("availability");
 
-    const profile = await TutorProfile.findOne({
-      user: tutorId,
-    });
-
-    if (!profile) {
+    if (!tutor) {
       return res.status(404).json({
-        message: "Tutor profile not found",
+        message: "Tutor not found",
       });
     }
 
     res.status(200).json({
-      availability: profile.availability || [],
+      availability: tutor.availability || [],
     });
   } catch (error) {
     res.status(500).json({
@@ -99,8 +96,6 @@ const getTutorAvailability = async (req, res) => {
 // ==============================
 const updateTutorAvailability = async (req, res) => {
   try {
-    const tutorId = req.user._id;
-
     const { availability } = req.body;
 
     if (!Array.isArray(availability)) {
@@ -109,59 +104,24 @@ const updateTutorAvailability = async (req, res) => {
       });
     }
 
-    const validDays = [
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-      "sunday",
-    ];
+    const tutor = await User.findOne({
+      _id: req.user._id,
+      role: "tutor",
+    });
 
-    for (const slot of availability) {
-      if (!slot.day || !slot.startTime || !slot.endTime) {
-        return res.status(400).json({
-          message: "Day, start time and end time are required",
-        });
-      }
-
-      if (!validDays.includes(slot.day.toLowerCase())) {
-        return res.status(400).json({
-          message: `Invalid day: ${slot.day}`,
-        });
-      }
-
-      const start = new Date(`1970-01-01T${slot.startTime}:00`);
-
-      const end = new Date(`1970-01-01T${slot.endTime}:00`);
-
-      if (start >= end) {
-        return res.status(400).json({
-          message: `Start time must be earlier than end time for ${slot.day}`,
-        });
-      }
-    }
-
-    const profile = await TutorProfile.findOneAndUpdate(
-      { user: tutorId },
-      {
-        availability,
-      },
-      {
-        new: true,
-      },
-    );
-
-    if (!profile) {
+    if (!tutor) {
       return res.status(404).json({
-        message: "Tutor profile not found",
+        message: "Tutor not found",
       });
     }
 
+    tutor.availability = availability;
+
+    await tutor.save();
+
     res.status(200).json({
       message: "Availability updated successfully",
-      availability: profile.availability,
+      availability: tutor.availability,
     });
   } catch (error) {
     res.status(500).json({
